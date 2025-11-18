@@ -1,48 +1,46 @@
-{
-  "expo": {
-    "name": "meuDiario",
-    "slug": "meuDiario",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "meudiario",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "ios": {
-      "supportsTablet": true
-    },
-    "android": {
-      "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
-      },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
-    },
-    "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
-        }
-      ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    }
-  }
+import React, {useEffect, useState} from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { supabase } from './src/supabase';
+import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
+import HomeScreen from './src/screens/HomeScreen';
+import EntryEditor from './src/screens/EntryEditor';
+import EntryView from './src/screens/EntryView';
+
+
+const Stack = createNativeStackNavigator();
+
+
+export default function App(){
+const [session, setSession] = useState(null);
+
+
+useEffect(()=>{
+const s = supabase.auth.getSession().then(({ data }) => setSession(data.session));
+const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+setSession(session);
+});
+return ()=> listener?.subscription?.unsubscribe();
+},[])
+
+
+return (
+<NavigationContainer>
+<Stack.Navigator>
+{session?.user ? (
+<>
+<Stack.Screen name="Home" component={HomeScreen} />
+<Stack.Screen name="EntryEditor" component={EntryEditor} />
+<Stack.Screen name="EntryView" component={EntryView} />
+</>
+) : (
+<>
+<Stack.Screen name="Login" component={LoginScreen} />
+<Stack.Screen name="Register" component={RegisterScreen} />
+</>
+)}
+</Stack.Navigator>
+</NavigationContainer>
+)
 }
